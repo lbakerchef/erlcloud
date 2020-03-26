@@ -1147,6 +1147,7 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Config) 
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Config) when is_integer(ExpireTime) ->
+io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
     {Host0, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 
     % if a host header was passed in, use that; otherwise default to config
