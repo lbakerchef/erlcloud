@@ -1147,13 +1147,21 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Config) 
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Config) when is_integer(ExpireTime) ->
-    {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
+    {Host0, Path, URL} = get_object_url_elements(BucketName, Key, Config),
+
+    % if a host header was passed in, use that; otherwise default to config
+    {Host, Headers1}  =
+        case lists:search(fun({Key, _}) -> string:casefold(Key) == "host" end, Headers0) of
+            {_, {_, Host1}} -> {Host1, lists:filter(fun({Key, _}) -> string:casefold(Key) /= "host" end, Headers0)};
+            false           -> {Host0, Headers0}
+        end,
+
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Date = erlcloud_aws:iso_8601_basic_time(),
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
-    Headers = lists:keysort(1, [{"host", Host} | Headers0]),
+    Headers = lists:keysort(1, [{"host", Host} | Headers1]),
     SignedHeaders = string:join([element(1, X) || X <- Headers], ";"),
 
     QP1 = [{"X-Amz-Algorithm", "AWS4-HMAC-SHA256"},
