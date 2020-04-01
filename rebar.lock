@@ -2,7 +2,11 @@
 [{<<"base16">>,{pkg,<<"base16">>,<<"1.0.0">>},0},
  {<<"eini">>,{pkg,<<"eini">>,<<"1.2.6">>},0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},0},
- {<<"lhttpc">>,{pkg,<<"lhttpc">>,<<"1.6.2">>},0}]}.
+ {<<"lhttpc">>,{pkg,<<"lhttpc">>,<<"1.6.2">>},0},
+ {<<"proper">>,
+  {git,"git@github.com:proper-testing/proper.git",
+       {ref,"6bfba3362f59e423393d8295b2faa6e1b384b71e"}},
+  0}]}.
 [
 {pkg_hash,[
  {<<"base16">>, <<"283644E2B21BD5915ACB7178BED7851FB07C6E5749B8FAD68A53C501092176D9">>},
