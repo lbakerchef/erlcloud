@@ -1157,8 +1157,8 @@ io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
 
     % if a host header was passed in, use that; otherwise default to config
     {Host, Headers1}  =
-        case lists:search(fun({Key, _}) -> string:casefold(Key) == "host" end, Headers0) of
-            {_, {_, Host1}} -> {Host1, lists:filter(fun({Key, _}) -> string:casefold(Key) /= "host" end, Headers0)};
+        case lists:search(fun({Key0, _}) -> string:casefold(Key0) == "host" end, Headers0) of
+            {_, {_, Host1}} -> {Host1, lists:filter(fun({Key0, _}) -> string:casefold(Key0) /= "host" end, Headers0)};
             false           -> {Host0, Headers0}
         end,
 
