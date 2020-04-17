@@ -34,6 +34,7 @@
          make_presigned_v4_url/5,
          make_presigned_v4_url/6,
          make_presigned_v4_url/7,
+         make_presigned_v4_url/8,
          start_multipart/2, start_multipart/5,
          upload_part/5, upload_part/7,
          complete_multipart/4, complete_multipart/6,
@@ -1147,6 +1148,10 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Config) 
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Config) when is_integer(ExpireTime) ->
+    make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, undefined, Config).
+
+-spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string() | undefined, aws_config()) -> string().
+make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
 io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
     {Host0, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 
@@ -1158,7 +1163,7 @@ io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
         end,
 
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
-    Date = erlcloud_aws:iso_8601_basic_time(),
+    Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
