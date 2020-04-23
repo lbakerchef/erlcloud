@@ -1152,8 +1152,9 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string() | undefined, aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
-io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
     {Host0, Path, URL} = get_object_url_elements(BucketName, Key, Config),
+io:format("~n~n----------------------------------------------"),
+io:format("~nerlcloud_s3:make_presigned_v4_url~nheaders = ~p~nHost0 = ~p~nPath = ~p~nURL = ~p", [Headers0, Host0, Path, URL]),
 
     % if a host header was passed in, use that; otherwise default to config
     {Host, Headers1}  =
@@ -1162,13 +1163,16 @@ io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
             false           -> {Host0, Headers0}
         end,
 
+io:format("~npassed case statement"),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
+io:format("~nset date"),
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
     Headers = lists:keysort(1, [{"host", Host} | Headers1]),
     SignedHeaders = string:join([element(1, X) || X <- Headers], ";"),
+io:format("~nset headers"),
 
     QP1 = [{"X-Amz-Algorithm", "AWS4-HMAC-SHA256"},
           {"X-Amz-Credential", Credential},
@@ -1178,6 +1182,8 @@ io:format("~n~nerlcloud_s3:make_presigned_v4_url headers = ~p", [Headers0]),
     Payload = "UNSIGNED-PAYLOAD",
     Signature = signature(Config, Path, Date, Region, Method, QP1, Headers, Payload),
     QueryStr = erlcloud_http:make_query_string(QP1 ++ [{"X-Amz-Signature", Signature}], no_assignment),
+io:format("~nfinished make_presigned_v4_url"),
+io:format("~n----------------------------------------------"),
     lists:flatten([URL, "?", QueryStr]).
 
 -spec make_get_url(integer(), string(), string()) -> iolist().
