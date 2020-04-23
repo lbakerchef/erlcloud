@@ -1152,25 +1152,43 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string() | undefined, aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
-    {Host0, Path, URL} = get_object_url_elements(BucketName, Key, Config),
+    {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 io:format("~n~n----------------------------------------------"),
-io:format("~nerlcloud_s3:make_presigned_v4_url~nheaders = ~p~nHost0 = ~p~nPath = ~p~nURL = ~p", [Headers0, Host0, Path, URL]),
-
-    % if a host header was passed in, use that; otherwise default to config
-    {Host, Headers1}  =
-        case lists:search(fun({Key0, _}) -> string:casefold(Key0) == "host" end, Headers0) of
-            {_, {_, Host1}} -> {Host1, lists:filter(fun({Key0, _}) -> string:casefold(Key0) /= "host" end, Headers0)};
-            false           -> {Host0, Headers0}
-        end,
-
-io:format("~npassed case statement"),
+io:format("~nerlcloud_s3:make_presigned_v4_url~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [Headers0, Host, Path, URL]),
+io:format("~ncheck that headers are not casefolded here. only want to do that once"),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
 io:format("~nset date"),
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
-    Headers = lists:keysort(1, [{"host", Host} | Headers1]),
+
+    % WHOOPS - this only works with erlang 21+
+    % if a host header was passed in, use that; otherwise default to config
+    %{Host, Headers1} =
+    %    case lists:search(fun({Key0, _}) -> string:casefold(Key0) == "host" end, Headers0) of
+    %        {_, {_, Host1}} -> {Host1, lists:filter(fun({Key0, _}) -> string:casefold(Key0) /= "host" end, Headers0)};
+    %        false           -> {Host0, Headers0}
+    %    end,
+
+    % if a host header was passed in, use that; otherwise default to config
+    %Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
+    %{Host, Headers2} =
+    %    case lists:keytake("host", 1, Headers1) of
+    %        {_, {_, Host00}, Headers22}  -> {Host00, Headers22};
+    %        false -> {Host0, Headers1}
+    %    end,
+
+    Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
+    HostHeader =
+        case lists:any(fun({"host", _}) -> true; (_) -> false end, Headers1) of
+            true -> [];
+            _    -> [{"host", Host}]
+        end,
+io:format("~npassed case statement"),
+
+    %Headers = lists:keysort(1, [{"host", Host} | Headers2]),
+    Headers = lists:keysort(1, HostHeader ++ Headers1),
     SignedHeaders = string:join([element(1, X) || X <- Headers], ";"),
 io:format("~nset headers"),
 
