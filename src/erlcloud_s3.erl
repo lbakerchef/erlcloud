@@ -1150,15 +1150,15 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Config) 
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Config) when is_integer(ExpireTime) ->
     make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, undefined, Config).
 
+% Headers0: [{key, val}...] where key is a casefolded string
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string() | undefined, aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
     {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 io:format("~n~n----------------------------------------------"),
 io:format("~nerlcloud_s3:make_presigned_v4_url~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [Headers0, Host, Path, URL]),
-io:format("~ncheck that headers are not casefolded here. only want to do that once"),
+io:format("~nkeys in headers should be casefolded ^^^"),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
-io:format("~nset date"),
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
@@ -1179,18 +1179,20 @@ io:format("~nset date"),
     %        false -> {Host0, Headers1}
     %    end,
 
-    Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
+    % the header key in {key, value} should be casefolded; however, to avoid
+    % duplicating this work it should be done (as is sometimes necessary)
+    % before calling this function.
+    %Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
+
     HostHeader =
-        case lists:any(fun({"host", _}) -> true; (_) -> false end, Headers1) of
+        case lists:any(fun({"host", _}) -> true; (_) -> false end, Headers0) of
             true -> [];
             _    -> [{"host", Host}]
         end,
-io:format("~npassed case statement"),
 
     %Headers = lists:keysort(1, [{"host", Host} | Headers2]),
-    Headers = lists:keysort(1, HostHeader ++ Headers1),
+    Headers = lists:keysort(1, HostHeader ++ Headers0),
     SignedHeaders = string:join([element(1, X) || X <- Headers], ";"),
-io:format("~nset headers"),
 
     QP1 = [{"X-Amz-Algorithm", "AWS4-HMAC-SHA256"},
           {"X-Amz-Credential", Credential},
