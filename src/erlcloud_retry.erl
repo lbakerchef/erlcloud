@@ -92,6 +92,7 @@ request_and_retry(Config, ResultFun, {retry, Request}, MaxAttempts) ->
     Request2 = Request#aws_request{attempt = Attempt + 1},
     RetryFun = Config#aws_config.retry,
     ResponseTypeFun = Config#aws_config.retry_response_type,
+io:format("~nin erlcloud_retry:request_and_retry"),
     Rsp = erlcloud_httpc:request(URI, Method, Headers, Body,
         erlcloud_aws:get_timeout(Config), Config),
     case Rsp of
@@ -115,6 +116,7 @@ request_and_retry(Config, ResultFun, {retry, Request}, MaxAttempts) ->
                         MaxAttempts - 1)
             end;
         {error, Reason} ->
+io:format("~nerlcloud_retry:request_and_retry ERROR!"),
             Request4 = Request2#aws_request{
                          response_type = error,
                          error_type = httpc,

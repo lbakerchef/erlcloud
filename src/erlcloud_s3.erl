@@ -1155,7 +1155,7 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
     {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 io:format("~n~n----------------------------------------------"),
-io:format("~nerlcloud_s3:make_presigned_v4_url~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [Headers0, Host, Path, URL]),
+io:format("~nerlcloud_s3:make_presigned_v4_url~nExpireTime = ~p~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [ExpireTime, Headers0, Host, Path, URL]),
 io:format("~nkeys in headers should be casefolded ^^^"),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
@@ -1202,6 +1202,7 @@ io:format("~nkeys in headers should be casefolded ^^^"),
     Payload = "UNSIGNED-PAYLOAD",
     Signature = signature(Config, Path, Date, Region, Method, QP1, Headers, Payload),
     QueryStr = erlcloud_http:make_query_string(QP1 ++ [{"X-Amz-Signature", Signature}], no_assignment),
+io:format("~npresigned url: ~p", [lists:flatten([URL, "?", QueryStr])]),
 io:format("~nfinished make_presigned_v4_url"),
 io:format("~n----------------------------------------------"),
     lists:flatten([URL, "?", QueryStr]).
@@ -1928,21 +1929,46 @@ s3_request(Config, Method, Host, Path, Subreasource, Params, POSTData, Headers) 
 %% s3_request2 returns {ok, Body} or {error, Reason} instead of throwing as s3_request does
 %% This is the preferred pattern for new APIs
 s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers) ->
+io:format("~nin erlcloud_s3:s3_request2"),
+io:format("~nincoming headers: ~p", [Headers]),
+io:format("~nupdating config"),
     case erlcloud_aws:update_config(Config) of
         {ok, Config1} ->
+            io:format("~nsucceeded in updating config. calling s3_request4_no_update"),
             case s3_request4_no_update(Config1, Method, Bucket, Path,
                    Subresource, Params, POSTData, Headers)
             of
-                {error, {http_error, StatusCode, _, _, _}} = RedirectResponse
+                {error, {http_error, StatusCode, A, B, C}} = RedirectResponse
                     when StatusCode >= 301 andalso StatusCode < 400 ->
+                    io:format("~nfollowing redirect with s3_follow_redirect. StatusCode = ~p  A = ~p  B = ~p  C = ~p", [StatusCode, A, B, C]),
                     s3_follow_redirect(RedirectResponse, Config1, Method, Bucket, Path,
                         Subresource, Params, POSTData, Headers);
                 {error, {http_error, StatusCode, StatusLine, Body, _Headers}} ->
+                    io:format("~nfailure in s3_request4_no_update:"),
+                    io:format("~nConfig1:     ~p", [Config1]),
+                    io:format("~nMethod:      ~p", [Method]),
+                    io:format("~nBucket:      ~p", [Bucket]),
+                    io:format("~nPath:        ~p", [Path]),
+                    io:format("~nSubresource: ~p", [Subresource]),
+                    io:format("~nParams:      ~p", [Params]),
+                    io:format("~nPOSTData:    ~p", [POSTData]),
+                    io:format("~nHeaders:     ~p", [_Headers]),
+                    io:format("~nerror:       ~p", [{http_error, StatusCode, StatusLine, Body}]),
                     {error, {http_error, StatusCode, StatusLine, Body}};
                 Response ->
                     Response
             end;
         {error, Reason} ->
+            io:format("~nfailure to update config"),
+            io:format("~nConfig:      ~p", [Config]),
+            io:format("~nMethod:      ~p", [Method]),
+            io:format("~nBucket:      ~p", [Bucket]),
+            io:format("~nPath:        ~p", [Path]),
+            io:format("~nSubresource: ~p", [Subresource]),
+            io:format("~nParams:      ~p", [Params]),
+            io:format("~nPOSTData:    ~p", [POSTData]),
+            io:format("~nHeaders:     ~p", [Headers]),
+            io:format("~nerror:       ~p", [Reason]),
             {error, Reason}
     end.
 
@@ -1968,9 +1994,13 @@ s3_xml_request2(Config, Method, Host, Path, Subresource, Params, POSTData, Heade
 %% 'path' - older path-style URLs to access a bucket.
 s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
                       Headers) ->
+io:format("~nin erlcloud_s3:s3_request4_no_update"),
     ContentType = proplists:get_value("content-type", Headers, ""),
+io:format("~nContentType = ~p", [ContentType]),
     FParams = [Param || {_, Value} = Param <- Params, Value =/= undefined],
+io:format("~nFParams = ~p", [FParams]),
     FHeaders = [Header || {_, Val} = Header <- Headers, Val =/= undefined],
+io:format("~nFHeaders = ~p", [FHeaders]),
 
     QueryParams = case Subresource of
         "" ->
@@ -1978,8 +2008,10 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
         _ ->
             [{Subresource, ""} | FParams]
     end,
+io:format("~nQueryParams = ~p", [QueryParams]),
 
     S3Host = Config#aws_config.s3_host,
+io:format("~nS3Host = ~p", [S3Host]),
     AccessMethod = case Config#aws_config.s3_bucket_access_method of
         auto ->
             case erlcloud_util:is_dns_compliant_name(Bucket) orelse
@@ -2008,6 +2040,7 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
                          Path])),
             {PathStyleUrl, S3Host}
     end,
+io:format("~nAccessMethod = ~p", [AccessMethod]),
 
     RequestHeaders = erlcloud_aws:sign_v4(
         Method, EscapedPath, Config,
@@ -2015,6 +2048,7 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
         Body,
         aws_region_from_host(S3Host),
         "s3", QueryParams),
+io:format("~nRequestHeaders = ~p", [RequestHeaders]),
 
     RequestURI = lists:flatten([
         Config#aws_config.s3_scheme,
@@ -2028,6 +2062,7 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
             true ->
               [$&, erlcloud_http:make_query_string(FParams, no_assignment)]
         end]),
+io:format("~nRequestURI = ~p", [RequestURI]),
 
     {RequestHeaders2, RequestBody} = case Method of
                                          M when M =:= get orelse M =:= head orelse M =:= delete ->
@@ -2041,8 +2076,12 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
                                                         end,
                                              {Headers2, Body}
                                      end,
+io:format("~n{RequestHeaders2, RequestBody} = {~p, ~p}", [RequestHeaders2, RequestBody]),
     Request = #aws_request{service = s3, uri = RequestURI, method = Method, request_headers = RequestHeaders2, request_body = RequestBody},
     Request2 = erlcloud_retry:request(Config, Request, fun s3_result_fun/1),
+io:format("~nRequest = ~p", [Request]),
+io:format("~nRequest2 = ~p", [Request2]),
+io:format("~nEND erlcloud_s3:s3_request4_no_update"),
     erlcloud_aws:request_to_return(Request2).
 
 
