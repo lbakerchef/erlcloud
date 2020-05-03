@@ -97,6 +97,8 @@ io:format("~nin erlcloud_retry:request_and_retry"),
         erlcloud_aws:get_timeout(Config), Config),
     case Rsp of
         {ok, {{Status, StatusLine}, ResponseHeaders, ResponseBody}} ->
+io:format("~nerlcloud_httpc:request successful"),
+io:format("~nRsp = ~p", [Rsp]),
             Request3 = Request2#aws_request{
                  error_type = aws,
                  response_status = Status,

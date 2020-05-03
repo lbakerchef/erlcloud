@@ -1035,12 +1035,24 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
      SignedHeaders}.
 
 sign_v4_content_sha256_header( Headers, Payload ) ->
+io:format("~nin erlcloud_aws:sign_v4_content_sha256_header"),
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
-            PayloadHash = hash_encode(Payload),
+            %PayloadHash = hash_encode(Payload),
+io:format("~nx-amz-content-sha256 header undefined. defining..."),
+PayloadHash = case hash_encode(Payload) of
+                  [String] ->
+                      io:format("~nREMOVED FROM LIST! ~p", [String]),
+                      String;
+                  Whatever ->
+                      io:format("~nnot in list! ~p", [Whatever]),
+                      Whatever
+              end,
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
-        PayloadHash -> {PayloadHash, Headers}
+        PayloadHash ->
+io:format("~nx-amz-content-sha256 header already defined (in list or not?): ~p", [PayloadHash]),
+{PayloadHash, Headers}
     end.
 
 canonical_headers(Headers) ->
