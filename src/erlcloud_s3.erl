@@ -1148,17 +1148,18 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Config) 
 
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Config) when is_integer(ExpireTime) ->
-    make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, undefined, Config).
+    Date = erlcloud_aws:iso_8601_basic_time(),
+    make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config).
 
 % Headers0: [{key, val}...] where key is a casefolded string
--spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string() | undefined, aws_config()) -> string().
-make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date0, Config) when is_integer(ExpireTime) ->
+-spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string(), aws_config()) -> string().
+make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config) when is_integer(ExpireTime) ->
     {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 io:format("~n~n----------------------------------------------"),
 io:format("~nerlcloud_s3:make_presigned_v4_url~nExpireTime = ~p~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [ExpireTime, Headers0, Host, Path, URL]),
 io:format("~nkeys in headers should be casefolded ^^^"),
+io:format("~ncompare url with bksw_sec url ^^^"),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
-    Date = case Date0 of undefined -> erlcloud_aws:iso_8601_basic_time(); _ -> Date0 end,
 
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
