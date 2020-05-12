@@ -1003,7 +1003,7 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Dat
 io:format("~nin erlcloud_aws:sign_v4 ..."),
 io:format("~nMethod: ~p", [Method]),
 io:format("~nUri:    ~p", [Uri]),
-io:format("~nHeaders ~p", [Headers]),
+io:format("~nHeaders:~p", [Headers]),
 io:format("~nPayload:~p", [Payload]),
 io:format("~nRegion: ~p", [Region]),
 io:format("~nService:~p", [Service]),
@@ -1016,6 +1016,8 @@ Headers0 = case proplists:get_value("x-amz-date", Headers) of
                _ ->
                    Headers
            end,
+
+io:format("~nHeaders0: ~p", [Headers0]),
 
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( Headers0, Payload ),
