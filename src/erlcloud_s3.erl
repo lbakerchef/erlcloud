@@ -1957,6 +1957,7 @@ io:format("~nupdating config"),
                     io:format("~nerror:       ~p", [{http_error, StatusCode, StatusLine, Body}]),
                     {error, {http_error, StatusCode, StatusLine, Body}};
                 Response ->
+                    io:format("~nerlcloud_s3:s3_request2 succeeded, response = ~p", [Response]),
                     Response
             end;
         {error, Reason} ->

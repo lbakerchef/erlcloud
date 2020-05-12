@@ -1000,6 +1000,15 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
+io:format("~nin erlcloud_aws:sign_v4 ..."),
+io:format("~nMethod: ~p", [Method]),
+io:format("~nUri:    ~p", [Uri]),
+io:format("~nHeaders ~p", [Headers]),
+io:format("~nPayload:~p", [Payload]),
+io:format("~nRegion: ~p", [Region]),
+io:format("~nService:~p", [Service]),
+io:format("~nQryPrms:~p", [QueryParams]),
+io:format("~nDate:   ~p", [Date]),
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( [{"x-amz-date", Date} | Headers], Payload ),
     Headers2 = case Config#aws_config.security_token of
@@ -1012,6 +1021,7 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Dat
     SigningKey = signing_key(Config, Date, Region, Service),
     Signature = base16(erlcloud_util:sha256_mac( SigningKey, ToSign)),
     Authorization = authorization(Config, CredentialScope, SignedHeaders, Signature),
+io:format("~nerlcloud_aws:sign_v4 complete"),
     [{"Authorization", lists:flatten(Authorization)} | Headers2].
 
 -spec iso_8601_basic_time() -> string().
