@@ -1010,6 +1010,7 @@ io:format("~nService:~p", [Service]),
 io:format("~nQryPrms:~p", [QueryParams]),
 io:format("~nDate:   ~p", [Date]),
 
+% use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
                undefined ->
                    [{"x-amz-date", Date} | Headers];
