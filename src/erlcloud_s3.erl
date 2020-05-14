@@ -229,10 +229,12 @@ create_bucket(BucketName, ACL, LocationConstraint) ->
 
 create_bucket(BucketName, ACL, LocationConstraint, Config)
   when is_list(BucketName), is_atom(ACL), is_atom(LocationConstraint) ->
+io:format("~nin erlcloud_s3:create_bucket"),
     Headers = case ACL of
                   private -> [];  %% private is the default
                   _       -> [{"x-amz-acl", encode_acl(ACL)}]
               end,
+io:format("~nHeaders = ~p", [Headers]),
     POSTData = case encode_location_constraint(LocationConstraint) of
                    undefined -> <<>>;
                    LocationName ->
@@ -240,6 +242,7 @@ create_bucket(BucketName, ACL, LocationConstraint, Config)
                               [{'LocationConstraint', [LocationName]}]},
                        list_to_binary(xmerl:export_simple([XML], xmerl_xml))
                end,
+io:format("~nPOSTData = ~p", [POSTData]),
     s3_simple_request(Config, put, BucketName, "/", "", [], POSTData, Headers).
 
 encode_location_constraint(eu) -> "EU";
@@ -1154,15 +1157,11 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
 % Headers0: [{key, val}...] where key is a casefolded string
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config) when is_integer(ExpireTime) ->
-    {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
 io:format("~n~n----------------------------------------------"),
-io:format("~nerlcloud_s3:make_presigned_v4_url~nExpireTime = ~p~nheaders = ~p~nHost = ~p~nPath = ~p~nURL = ~p", [ExpireTime, Headers0, Host, Path, URL]),
-io:format("~nkeys in headers should be casefolded ^^^"),
-io:format("~ncompare url with bksw_sec url ^^^"),
+io:format("~nerlcloud_s3:make_presigned_v4_url"),
+    {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
-
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
-
 
     % WHOOPS - this only works with erlang 21+
     % if a host header was passed in, use that; otherwise default to config
@@ -1203,6 +1202,26 @@ io:format("~ncompare url with bksw_sec url ^^^"),
     Payload = "UNSIGNED-PAYLOAD",
     Signature = signature(Config, Path, Date, Region, Method, QP1, Headers, Payload),
     QueryStr = erlcloud_http:make_query_string(QP1 ++ [{"X-Amz-Signature", Signature}], no_assignment),
+io:format(
+          "~nExpireTime = ~p"
+          "~nBucketName = ~p"
+          "~nMethod     = ~p"
+          "~nKey        = ~p"
+          "~nQueryParms = ~p"
+          "~nHeaders0   = ~p"
+          "~nHost       = ~p"
+          "~nPath       = ~p"
+          "~nURL        = ~p" 
+          "~nRegion     = ~p" 
+          "~nCredential = ~p" 
+          "~nHostHeader = ~p" 
+          "~nHeaders    = ~p" 
+          "~nSignedHeads= ~p", 
+          [ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Host, Path, URL, Region, Credential, HostHeader, Headers, SignedHeaders]),
+io:format("~nkeys in headers should be casefolded ^^^"),
+io:format("~ncompare url with bksw_sec url ^^^"),
+
+
 io:format("~npresigned url: ~p", [lists:flatten([URL, "?", QueryStr])]),
 io:format("~nfinished make_presigned_v4_url"),
 io:format("~n----------------------------------------------"),
