@@ -17,6 +17,8 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 
+-include_lib("eunit/include/eunit.hrl").
+
 %% Helpers
 -export([backoff/1,
          no_retry/1,
@@ -92,13 +94,13 @@ request_and_retry(Config, ResultFun, {retry, Request}, MaxAttempts) ->
     Request2 = Request#aws_request{attempt = Attempt + 1},
     RetryFun = Config#aws_config.retry,
     ResponseTypeFun = Config#aws_config.retry_response_type,
-io:format("~nin erlcloud_retry:request_and_retry"),
+?debugFmt("~nin erlcloud_retry:request_and_retry", []),
     Rsp = erlcloud_httpc:request(URI, Method, Headers, Body,
         erlcloud_aws:get_timeout(Config), Config),
     case Rsp of
         {ok, {{Status, StatusLine}, ResponseHeaders, ResponseBody}} ->
-io:format("~nerlcloud_httpc:request successful"),
-io:format("~nRsp = ~p", [Rsp]),
+?debugFmt("~nerlcloud_httpc:request successful", []),
+?debugFmt("~nRsp = ~p", [Rsp]),
             Request3 = Request2#aws_request{
                  error_type = aws,
                  response_status = Status,
@@ -118,7 +120,7 @@ io:format("~nRsp = ~p", [Rsp]),
                         MaxAttempts - 1)
             end;
         {error, Reason} ->
-io:format("~nerlcloud_retry:request_and_retry ERROR!"),
+?debugFmt("~nerlcloud_retry:request_and_retry ERROR!", []),
             Request4 = Request2#aws_request{
                          response_type = error,
                          error_type = httpc,

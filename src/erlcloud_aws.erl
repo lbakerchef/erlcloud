@@ -36,6 +36,7 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("lhttpc/include/lhttpc_types.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 -define(ERLCLOUD_RETRY_TIMEOUT, 10000).
 -define(GREGORIAN_EPOCH_OFFSET, 62167219200).
@@ -1000,15 +1001,15 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
-io:format("~nin erlcloud_aws:sign_v4 ..."),
-io:format("~nMethod: ~p", [Method]),
-io:format("~nUri:    ~p", [Uri]),
-io:format("~nHeaders:~p", [Headers]),
-io:format("~nPayload:~p", [Payload]),
-io:format("~nRegion: ~p", [Region]),
-io:format("~nService:~p", [Service]),
-io:format("~nQryPrms:~p", [QueryParams]),
-io:format("~nDate:   ~p", [Date]),
+?debugFmt("~nin erlcloud_aws:sign_v4 ...", []),
+?debugFmt("~nMethod:  ~p", [Method]),
+?debugFmt("~nUri:     ~p", [Uri]),
+?debugFmt("~nHeaders: ~p", [Headers]),
+?debugFmt("~nPayload: ~p", [Payload]),
+?debugFmt("~nRegion:  ~p", [Region]),
+?debugFmt("~nService: ~p", [Service]),
+?debugFmt("~nQryPrms: ~p", [QueryParams]),
+?debugFmt("~nDate:    ~p", [Date]),
 
 % use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
@@ -1018,21 +1019,24 @@ Headers0 = case proplists:get_value("x-amz-date", Headers) of
                    Headers
            end,
 
-io:format("~nHeaders0: ~p", [Headers0]),
+?debugFmt("~nHeaders0 (add date if absent): ~p", [Headers0]),
 
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( Headers0, Payload ),
+?debugFmt("~ncalculated PayloadHash: ~p", [PayloadHash]),
+?debugFmt("~ncalculated Headers1:    ~p", [Headers1]),
     Headers2 = case Config#aws_config.security_token of
                    undefined -> Headers1;
                    Token -> [{"x-amz-security-token", Token} | Headers1]
                end,
+?debugFmt("~nHeaders2 (add security token if existing in config): ~p", [Headers2]),
     {Request, SignedHeaders} = canonical_request(Method, Uri, QueryParams, Headers2, PayloadHash),
     CredentialScope = credential_scope(Date, Region, Service),
     ToSign = to_sign(Date, CredentialScope, Request),
     SigningKey = signing_key(Config, Date, Region, Service),
     Signature = base16(erlcloud_util:sha256_mac( SigningKey, ToSign)),
     Authorization = authorization(Config, CredentialScope, SignedHeaders, Signature),
-io:format("~nerlcloud_aws:sign_v4 complete"),
+?debugFmt("~nerlcloud_aws:sign_v4 complete", []),
     [{"Authorization", lists:flatten(Authorization)} | Headers2].
 
 -spec iso_8601_basic_time() -> string().
@@ -1060,23 +1064,23 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
      SignedHeaders}.
 
 sign_v4_content_sha256_header( Headers, Payload ) ->
-io:format("~nin erlcloud_aws:sign_v4_content_sha256_header"),
+?debugFmt("~nin erlcloud_aws:sign_v4_content_sha256_header", []),
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
             %PayloadHash = hash_encode(Payload),
-io:format("~nx-amz-content-sha256 header undefined. defining..."),
+?debugFmt("~nx-amz-content-sha256 header undefined. defining...", []),
 PayloadHash = case hash_encode(Payload) of
                   [String] ->
-                      io:format("~nREMOVED FROM LIST! ~p", [String]),
+                      ?debugFmt("~nREMOVED FROM LIST! ~p", [String]),
                       String;
                   Whatever ->
-                      io:format("~nnot in list! ~p", [Whatever]),
+                      ?debugFmt("~nnot in list! ~p", [Whatever]),
                       Whatever
               end,
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash ->
-io:format("~nx-amz-content-sha256 header already defined (in list or not?): ~p", [PayloadHash]),
+?debugFmt("~nx-amz-content-sha256 header already defined (in list or not?): ~p", [PayloadHash]),
 {PayloadHash, Headers}
     end.
 
