@@ -1000,7 +1000,7 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
     sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date).
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
-sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
+sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date0) ->
 ?debugFmt("~nin erlcloud_aws:sign_v4 ...",
           "~nMethod:  ~p",
           "~nUri:     ~p",
@@ -1009,14 +1009,15 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Dat
           "~nRegion:  ~p",
           "~nService: ~p",
           "~nQryPrms: ~p",
-          "~nDate:    ~p",
-          [Method, Uri, Headers, Payload, Region, Service, QueryParams, Date]),
+          "~nDate0:   ~p",
+          [Method, Uri, Headers, Payload, Region, Service, QueryParams, Date0]),
 
 % use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
                undefined ->
-                   [{"x-amz-date", Date} | Headers];
-               _ ->
+                   Date = Date0,
+                   [{"x-amz-date", Date0} | Headers];
+               Date ->
                    Headers
            end,
 
