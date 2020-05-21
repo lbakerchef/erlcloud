@@ -1001,15 +1001,16 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
-?debugFmt("~nin erlcloud_aws:sign_v4 ...", []),
-?debugFmt("~nMethod:  ~p", [Method]),
-?debugFmt("~nUri:     ~p", [Uri]),
-?debugFmt("~nHeaders: ~p", [Headers]),
-?debugFmt("~nPayload: ~p", [Payload]),
-?debugFmt("~nRegion:  ~p", [Region]),
-?debugFmt("~nService: ~p", [Service]),
-?debugFmt("~nQryPrms: ~p", [QueryParams]),
-?debugFmt("~nDate:    ~p", [Date]),
+?debugFmt("~nin erlcloud_aws:sign_v4 ...",
+          "~nMethod:  ~p",
+          "~nUri:     ~p",
+          "~nHeaders: ~p",
+          "~nPayload: ~p",
+          "~nRegion:  ~p",
+          "~nService: ~p",
+          "~nQryPrms: ~p",
+          "~nDate:    ~p",
+          [Method, Uri, Headers, Payload, Region, Service, QueryParams, Date]),
 
 % use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
@@ -1019,12 +1020,10 @@ Headers0 = case proplists:get_value("x-amz-date", Headers) of
                    Headers
            end,
 
-?debugFmt("~nHeaders0 (add date if absent): ~p", [Headers0]),
-
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( Headers0, Payload ),
-?debugFmt("~ncalculated PayloadHash: ~p", [PayloadHash]),
-?debugFmt("~ncalculated Headers1:    ~p", [Headers1]),
+?debugFmt("~ncalculated PayloadHash:                     ~p", 
+          "~ncalculated Headers1 (added date if absent): ~p", [PayloadHash, Headers1]),
     Headers2 = case Config#aws_config.security_token of
                    undefined -> Headers1;
                    Token -> [{"x-amz-security-token", Token} | Headers1]
