@@ -1949,9 +1949,15 @@ s3_request(Config, Method, Host, Path, Subreasource, Params, POSTData, Headers) 
 
 %% s3_request2 returns {ok, Body} or {error, Reason} instead of throwing as s3_request does
 %% This is the preferred pattern for new APIs
-s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers) ->
+s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers0) ->
 ?debugFmt("~nin erlcloud_s3:s3_request2", []),
-?debugFmt("~nincoming headers: ~p", [Headers]),
+?debugFmt("~nincoming headers: ~p", [Headers0]),
+
+Headers = case proplists:get_value("content-type", Headers0) of
+              undefined -> [{"content-type", "text/xml"} | Headers0];
+              _         -> Headers0
+          end,
+
 ?debugFmt("~nupdating config", []),
     case erlcloud_aws:update_config(Config) of
         {ok, Config1} ->
