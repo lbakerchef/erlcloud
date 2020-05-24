@@ -232,8 +232,8 @@ create_bucket(BucketName, ACL, LocationConstraint, Config)
   when is_list(BucketName), is_atom(ACL), is_atom(LocationConstraint) ->
 ?debugFmt("~nin erlcloud_s3:create_bucket", []),
     Headers = case ACL of
-                  private -> [{"content-type", "text/xml"}];  %% private is the default
-                  _       -> [{"content-type", "text/xml"}, {"x-amz-acl", encode_acl(ACL)}]
+                  private -> [];  %% private is the default
+                  _       -> [{"x-amz-acl", encode_acl(ACL)}]
               end,
 ?debugFmt("~nHeaders = ~p", [Headers]),
     POSTData = case encode_location_constraint(LocationConstraint) of
