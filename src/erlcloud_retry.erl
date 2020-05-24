@@ -100,7 +100,7 @@ request_and_retry(Config, ResultFun, {retry, Request}, MaxAttempts) ->
     case Rsp of
         {ok, {{Status, StatusLine}, ResponseHeaders, ResponseBody}} ->
 ?debugFmt("~nerlcloud_httpc:request successful", []),
-?debugFmt("~nRsp = ~p", [Rsp]),
+%?debugFmt("~nRsp = ~p", [Rsp]),
             Request3 = Request2#aws_request{
                  error_type = aws,
                  response_status = Status,

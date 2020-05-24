@@ -52,7 +52,7 @@ request(URL, Method, Hdrs, Body, Timeout,
 
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = undefined, http_proxy = undefined}) ->
 ?debugFmt("~nerlcloud_httpc:request_lhttpc:", []),
-?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p", [URL, Method, Hdrs, Body, Timeout]),
+?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p", [URL, Method, Hdrs, "truncated", Timeout]),
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, []);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{http_proxy = HttpProxy, lhttpc_pool = undefined}) ->
     LHttpcOpts = [{proxy, HttpProxy}],

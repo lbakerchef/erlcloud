@@ -1001,7 +1001,7 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date0) ->
-?debugFmt("~nin erlcloud_aws:sign_v4 ..."),
+?debugFmt("~nin erlcloud_aws:sign_v4 ...", []),
 %          "~nMethod:  ~p",
 %          "~nUri:     ~p",
 %          "~nHeaders: ~p",
@@ -1080,7 +1080,7 @@ PayloadHash = case hash_encode(Payload) of
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash ->
-?debugFmt("~nx-amz-content-sha256 header already defined (in list or not?): ~p", [PayloadHash]),
+?debugFmt("~nx-amz-content-sha256 header already defined: ~p", [PayloadHash]),
 {PayloadHash, Headers}
     end.
 

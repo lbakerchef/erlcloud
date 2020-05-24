@@ -243,7 +243,7 @@ create_bucket(BucketName, ACL, LocationConstraint, Config)
                               [{'LocationConstraint', [LocationName]}]},
                        list_to_binary(xmerl:export_simple([XML], xmerl_xml))
                end,
-?debugFmt("~nPOSTData = ~p", [POSTData]),
+?debugFmt("~nPOSTData = ~p", ["truncated"]),
     s3_simple_request(Config, put, BucketName, "/", "", [], POSTData, Headers).
 
 encode_location_constraint(eu) -> "EU";
@@ -1211,14 +1211,16 @@ io:format("~nerlcloud_s3:make_presigned_v4_url"),
           "~nQueryParms = ~p"
           "~nHeaders0   = ~p"
           "~nHost       = ~p"
+          "~ns3_port    = ~p"
+          "~nport_spec  = ~p"
           "~nPath       = ~p"
           "~nURL        = ~p" 
           "~nRegion     = ~p" 
           "~nCredential = ~p" 
-          "~nHostHeader = ~p" 
+          "~nadd host header = ~p" 
           "~nHeaders    = ~p" 
           "~nSignedHeads= ~p", 
-          [ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Host, Path, URL, Region, Credential, HostHeader, Headers, SignedHeaders]),
+          [ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Host, Config#aws_config.s3_port, port_spec(Config), Path, URL, Region, Credential, HostHeader, Headers, SignedHeaders]),
 io:format("~nkeys in headers should be casefolded ^^^"),
 io:format("~ncompare url with bksw_sec url ^^^"),
 
@@ -1983,7 +1985,7 @@ Headers = case proplists:get_value("content-type", Headers0) of
                     ?debugFmt("~nerror:       ~p", [{http_error, StatusCode, StatusLine, Body}]),
                     {error, {http_error, StatusCode, StatusLine, Body}};
                 Response ->
-                    ?debugFmt("~nerlcloud_s3:s3_request2 succeeded, response = ~p", [Response]),
+                    ?debugFmt("~nerlcloud_s3:s3_request2 succeeded, response = ~p", ["truncated"]),
                     Response
             end;
         {error, Reason} ->
@@ -2104,11 +2106,11 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
                                                         end,
                                              {Headers2, Body}
                                      end,
-?debugFmt("~n{RequestHeaders2, RequestBody} = {~p, ~p}", [RequestHeaders2, RequestBody]),
+?debugFmt("~n{RequestHeaders2, RequestBody} = {~p, ~p}", [RequestHeaders2, "truncated"]),
     Request = #aws_request{service = s3, uri = RequestURI, method = Method, request_headers = RequestHeaders2, request_body = RequestBody},
     Request2 = erlcloud_retry:request(Config, Request, fun s3_result_fun/1),
-?debugFmt("~nRequest = ~p", [Request]),
-?debugFmt("~nRequest2 = ~p", [Request2]),
+?debugFmt("~nRequest = ~p", ["truncated"]),
+?debugFmt("~nRequest2 = ~p", ["truncated"]),
 ?debugFmt("~nEND erlcloud_s3:s3_request4_no_update", []),
     erlcloud_aws:request_to_return(Request2).
 
