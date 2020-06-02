@@ -29,45 +29,45 @@
 
 request(URL, Method, Hdrs, Body, Timeout,
         #aws_config{http_client = lhttpc} = Config) ->
-?debugFmt("~nerlcloud_httpc:request lhttpc", []),
+io:format("~nerlcloud_httpc:request lhttpc", []),
     request_lhttpc(URL, Method, Hdrs, Body, Timeout, Config);
 request(URL, Method, Hdrs, Body, Timeout,
         #aws_config{http_client = httpc} = Config) ->
-?debugFmt("~nerlcloud_httpc:request httpc", []),
+io:format("~nerlcloud_httpc:request httpc", []),
     request_httpc(URL, Method, Hdrs, Body, Timeout, Config);
 request(URL, Method, Hdrs, Body, Timeout,
         #aws_config{http_client = hackney} = Config) ->
-?debugFmt("~nerlcloud_httpc:request hackney", []),
+io:format("~nerlcloud_httpc:request hackney", []),
     request_hackney(URL, Method, Hdrs, Body, Timeout, Config);
 request(URL, Method, Hdrs, Body, Timeout,
         #aws_config{http_client = {M, F}} = Config)
     when is_atom(M), is_atom(F) ->
-?debugFmt("~nerlcloud_httpc:request {~p, ~p}", [M, F]),
+io:format("~nerlcloud_httpc:request {~p, ~p}", [M, F]),
     M:F(URL, Method, Hdrs, Body, Timeout, Config);
 request(URL, Method, Hdrs, Body, Timeout,
         #aws_config{http_client = F} = Config)
     when is_function(F, 6) ->
-?debugFmt("~nerlcloud_httpc:request ~p", [F]),
+io:format("~nerlcloud_httpc:request ~p", [F]),
     F(URL, Method, Hdrs, Body, Timeout, Config).
 
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = undefined, http_proxy = undefined}) ->
-?debugFmt("~nerlcloud_httpc:request_lhttpc:", []),
-?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p", [URL, Method, Hdrs, "truncated", Timeout]),
+io:format("~nerlcloud_httpc:request_lhttpc:", []),
+io:format("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p", [URL, Method, Hdrs, "truncated", Timeout]),
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, []);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{http_proxy = HttpProxy, lhttpc_pool = undefined}) ->
     LHttpcOpts = [{proxy, HttpProxy}],
-?debugFmt("~nerlcloud_httpc:request_lhttpc:", []),
-?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nHttpProxy=~p", [URL, Method, Hdrs, Body, Timeout, HttpProxy]),
+io:format("~nerlcloud_httpc:request_lhttpc:", []),
+io:format("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nHttpProxy=~p", [URL, Method, Hdrs, Body, Timeout, HttpProxy]),
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, LHttpcOpts);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = Pool, http_proxy = undefined}) ->
     LHttpcOpts = [{pool, Pool}, {pool_ensure, true}],
-?debugFmt("~nerlcloud_httpc:request_lhttpc:", []),
-?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nPool=~p", [URL, Method, Hdrs, Body, Timeout, Pool]),
+io:format("~nerlcloud_httpc:request_lhttpc:", []),
+io:format("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nPool=~p", [URL, Method, Hdrs, Body, Timeout, Pool]),
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, LHttpcOpts);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = Pool, http_proxy = HttpProxy}) ->
     LHttpcOpts = [{pool, Pool}, {pool_ensure, true}, {proxy, HttpProxy}],
-?debugFmt("~nerlcloud_httpc:request_lhttpc:", []),
-?debugFmt("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nLHttpcOpts=~p", [URL, Method, Hdrs, Body, Timeout, LHttpcOpts]),
+io:format("~nerlcloud_httpc:request_lhttpc:", []),
+io:format("~nURL=~p~nMethod=~p~nHdrs=~p~nBody=~p~nTimeout=~p~nLHttpcOpts=~p", [URL, Method, Hdrs, Body, Timeout, LHttpcOpts]),
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, LHttpcOpts).
 
 %% Guard clause protects against empty bodied requests from being
