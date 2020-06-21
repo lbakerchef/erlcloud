@@ -1001,17 +1001,6 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date0) ->
-io:format("~nin erlcloud_aws:sign_v4 ...", []),
-%          "~nMethod:  ~p",
-%          "~nUri:     ~p",
-%          "~nHeaders: ~p",
-%          "~nPayload: ~p",
-%          "~nRegion:  ~p",
-%          "~nService: ~p",
-%          "~nQryPrms: ~p",
-%          "~nDate0:   ~p",
-%          [Method, Uri, Headers, Payload, Region, Service, QueryParams, Date0]),
-
 % use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
                undefined ->
@@ -1030,13 +1019,11 @@ Headers0 = case proplists:get_value("x-amz-date", Headers) of
                    Token -> [{"x-amz-security-token", Token} | Headers1]
                end,
     {Request, SignedHeaders} = canonical_request(Method, Uri, QueryParams, Headers2, PayloadHash),
-io:format("~nerlcloud_aws:sign_v4 - computed canonical_request with: ~n~p~n~p~n~p~n~p~n~p~ncanonical_request = ~p", [Method, Uri, QueryParams, Headers2, PayloadHash, {Request, SignedHeaders}]),
     CredentialScope = credential_scope(Date, Region, Service),
     ToSign = to_sign(Date, CredentialScope, Request),
     SigningKey = signing_key(Config, Date, Region, Service),
     Signature = base16(erlcloud_util:sha256_mac( SigningKey, ToSign)),
     Authorization = authorization(Config, CredentialScope, SignedHeaders, Signature),
-io:format("~nerlcloud_aws:sign_v4 - computed CredentialScope with: ~n~p~n~p~n~p~nAuthorization = ~p~nerlcloud_aws:sign_v4 complete", [Date, Region, Service, Authorization]),
     [{"Authorization", lists:flatten(Authorization)} | Headers2].
 
 -spec iso_8601_basic_time() -> string().
@@ -1063,24 +1050,20 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
       PayloadHash],
      SignedHeaders}.
 
+% revisit changes here (necessary or not?)
 sign_v4_content_sha256_header( Headers, Payload ) ->
-io:format("~nin erlcloud_aws:sign_v4_content_sha256_header", []),
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
             %PayloadHash = hash_encode(Payload),
-io:format("~nx-amz-content-sha256 header undefined. defining...", []),
 PayloadHash = case hash_encode(Payload) of
                   [String] ->
-                      io:format("~nREMOVED FROM LIST! ~p", [String]),
                       String;
                   Whatever ->
-                      io:format("~nnot in list! ~p", [Whatever]),
                       Whatever
               end,
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash ->
-io:format("~nx-amz-content-sha256 header already defined: ~p", [PayloadHash]),
 {PayloadHash, Headers}
     end.
 
