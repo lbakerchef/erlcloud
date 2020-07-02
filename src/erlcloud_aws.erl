@@ -36,7 +36,6 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("lhttpc/include/lhttpc_types.hrl").
--include_lib("eunit/include/eunit.hrl").
 
 -define(ERLCLOUD_RETRY_TIMEOUT, 10000).
 -define(GREGORIAN_EPOCH_OFFSET, 62167219200).
@@ -1056,17 +1055,17 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
 sign_v4_content_sha256_header( Headers, Payload ) ->
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
-            %PayloadHash = hash_encode(Payload),
-PayloadHash = case hash_encode(Payload) of
-                  [String] ->
-                      String;
-                  Whatever ->
-                      Whatever
-              end,
+            PayloadHash =
+                case hash_encode(Payload) of
+                    [String] ->
+                        String;
+                    Whatever ->
+                        Whatever
+                end,
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash ->
-{PayloadHash, Headers}
+            {PayloadHash, Headers}
     end.
 
 canonical_headers(Headers) ->
